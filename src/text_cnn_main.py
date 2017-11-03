@@ -1,0 +1,23 @@
+# coding: utf-8
+from __future__ import print_function
+from __future__ import division
+import tensorflow as tf
+
+from text_cnn import Model
+from dataset import DataSet
+from config import Config
+
+
+def main():
+    my_config = Config()
+    my_data = DataSet(my_config, True)
+    my_config.we = my_data.we
+    my_model = Model(my_config)
+    init = tf.global_variables_initializer()
+    sess = tf.Session()
+    sess.run(init)
+    my_model.train_dev_test(sess, [my_data.train_x, my_data.train_y], [my_data.test_x, my_data.test_y])
+
+
+if __name__ == '__main__':
+    main()
