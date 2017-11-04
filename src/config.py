@@ -22,11 +22,12 @@ class Config(object):
     word_embed_file = _HOME_PATH + "/data/embed/glove.6B.100d.txt"
     vocab2id_file_pkl = _HOME_PATH + "/data/embed/{}_vocab2id.pkl".format(data_name)
     we_file_pkl = _HOME_PATH + "/data/embed/{}_we.pkl".format(data_name)
+    log_dir = _HOME_PATH + "/log"
 
     # [model]
     we = None
     model_name = "cnn"
-    epoch_size = 10
+    epoch_size = 5
     batch_size = 128
     word_dim = 100
     max_seq_len = 40

@@ -10,6 +10,7 @@ class Model(object):
         # base config
         self.model_name = config.model_name
         self.model_dir = config.model_dir
+        self.log_dir = config.log_dir
 
         # Setup Model Parameters
         self.max_seq_len = config.max_seq_len
@@ -34,6 +35,8 @@ class Model(object):
         self._set_cost_and_optimize()
         # Set prediction and acc
         self._set_predict()
+        # add tensor board
+        self._log_summaries()
         # model parameter saver
         self.saver = tf.train.Saver(tf.global_variables())
 
@@ -104,15 +107,16 @@ class Model(object):
         # Accuracy
         check_prediction = tf.equal(self.y_p, self.in_y)
         self.acc_num = tf.reduce_sum(tf.cast(check_prediction, tf.int32))
-        # acc = tf.reduce_mean(tf.cast(check_prediction, tf.float32))
+        self.acc = tf.reduce_mean(tf.cast(check_prediction, tf.float32))
 
-    def add_summaries(self):
+    def _log_summaries(self):
         """
         Adds summaries for the following variables to the graph and returns
         an operation to evaluate them.
         """
-        cost = tf.summary.scalar("cost (raw)", self.cost)
-        return tf.summary.merge([cost])
+        cost = tf.summary.scalar("cost", self.cost)
+        acc = tf.summary.scalar("acc", self.acc)
+        self.merged = tf.summary.merge([cost, acc])
 
     def model_train(self, sess, batch, drop_keep_rate=0.5):
         feed_dict = {
@@ -120,7 +124,7 @@ class Model(object):
             self.in_y: batch[1],
             self.drop_keep_rate: drop_keep_rate
         }
-        return_list = [self.train_op, self.cost, self.acc_num]
+        return_list = [self.train_op, self.merged, self.global_step, self.cost, self.acc_num]
 
         return sess.run(return_list, feed_dict)
 
@@ -132,16 +136,23 @@ class Model(object):
         }
         return sess.run(self.acc_num, feed_dict)
 
-    def train(self, sess, train_xy, batch_size=32):
+    def train(self, sess, train_xy, batch_size=32, summary_writer=None):
+        windows = 1000
         cost_sum = 0.0
         acc_sum = 0
         sample_cnt = 0
         for batch in batch_iter(train_xy[0], train_xy[1], batch_size=batch_size, shuffle=True):
-            _, cost, acc_num = self.model_train(sess, batch)
-            cost_sum += cost
-            acc_sum += acc_num
+            _, summary, step, cost, acc_num = self.model_train(sess, batch)
+            summary_writer.add_summary(summary, step)
             sample_cnt += len(batch[1])
-            print ("acc: {}".format(cost))
+            if sample_cnt % windows:
+                cost_sum += cost
+                acc_sum += acc_num
+            else:
+                cost_sum = 0.0
+                acc_sum = 0
+                sample_cnt = 0
+            # print ("cost: {}".format(cost))
         return cost_sum/sample_cnt, acc_sum/sample_cnt
 
     def test(self, sess, test_xy, load_init_model=False):
@@ -161,9 +172,9 @@ class Model(object):
         return acc_sum/sample_sum
 
     def train_dev_test(self, sess, train_xy, dev_xy=None, test_xy=None,
-                       batch_size=32, epoch_size=10, save_model=False):
+                       batch_size=32, epoch_size=10, save_model=False, summary_writer=None):
         for epoch in range(epoch_size):
-            cost, acc = self.train(sess, train_xy, batch_size)
+            cost, acc = self.train(sess, train_xy, batch_size, summary_writer)
             print ("Epoch {}: cost: {}, acc: {}".format(epoch, cost, acc))
             if dev_xy is not None:
                 dev_acc = self.test(sess, dev_xy)
@@ -176,3 +187,5 @@ class Model(object):
                 save_file = self.model_dir+'/{}/{}_saver.ckpt'.format(self.model_name, self.model_name)
                 self.saver.save(sess, save_file, global_step=epoch + 1)
 
+            if epoch < 3:
+                sess.run(self.learning_rate_decay_op)

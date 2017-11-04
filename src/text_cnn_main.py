@@ -16,7 +16,9 @@ def main():
     init = tf.global_variables_initializer()
     sess = tf.Session()
     sess.run(init)
-    my_model.train_dev_test(sess, [my_data.train_x, my_data.train_y], [my_data.test_x, my_data.test_y])
+    summary_writer = tf.summary.FileWriter(my_config.log_dir, sess.graph)
+    my_model.train_dev_test(sess, [my_data.train_x, my_data.train_y], [my_data.test_x, my_data.test_y],
+                            summary_writer=summary_writer)
 
 
 if __name__ == '__main__':

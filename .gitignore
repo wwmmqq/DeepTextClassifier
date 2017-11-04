@@ -1,0 +1,11 @@
+.DS_Store
+a.out
+*.a
+*.o
+*.pyc
+*.pkl
+*.log
+
+/backup
+/log
+/data
