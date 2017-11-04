@@ -58,6 +58,23 @@ http://cogcomp.org/Data/QA/QC/
         dev acc: 0.984
 
 
+#### RNN-ATT training
+![rnn-att](figs/qc_rnn_att_train.png)
+
+    Epoch 1:
+        train cost: 0.00179642121795
+        train acc: 0.980011587486
+        dev acc: 0.98
+    Epoch 2:
+        train cost: 0.000787947041509
+        train acc: 0.992757821553
+        dev acc: 0.982
+    Epoch 3:
+        train cost: 0.000631529912567
+        train acc: 0.993626882966
+        dev acc: 0.984
+
+
 
 ## NLPCC 2017 News headline Classification
 https://github.com/FudanNLP/nlpcc2017_news_headline_categorization
