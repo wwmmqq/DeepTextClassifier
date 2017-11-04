@@ -15,6 +15,17 @@ http://cogcomp.org/Data/QA/QC/
 | ------ | ------ | ------ | ------ | ------ |
 | sentence | question types | 10 | 6 | English
 
+#### kim cnn train
+![kim-cnn](figs/qc_train.png)
+
+    Epoch 8:
+        cost: 0.00420041548721
+        train acc: 0.974217844728
+        test acc: 0.964
+
+
+
+
 ### NLPCC 2017 News headline Classification
 https://github.com/FudanNLP/nlpcc2017_news_headline_categorization
 
@@ -22,14 +33,6 @@ https://github.com/FudanNLP/nlpcc2017_news_headline_categorization
 | ------ | ------ | ------ | ------ | ------ |
 | sentence | news headline | 10 | 6 | Chinese
 
-
-## kim cnn train
-![kim-cnn](figs/qc_train.png)
-
-    Epoch 8:
-        cost: 0.00420041548721
-        train acc: 0.974217844728
-        test acc: 0.964
 
 
 
