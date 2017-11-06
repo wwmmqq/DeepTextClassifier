@@ -3,7 +3,7 @@ from __future__ import print_function
 from __future__ import division
 import tensorflow as tf
 
-from text_rnn import Model
+from text_self_structure_att import Model
 from dataset import DataSet
 from config import ConfigRnnAtt as Config
 

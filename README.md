@@ -74,6 +74,21 @@ http://cogcomp.org/Data/QA/QC/
         train acc: 0.993626882966
         dev acc: 0.984
 
+#### Structured Self-attentive training
+![rnn-att](figs/qc_self_stru_train.png)
+
+    Epoch 1:
+        cost: 0.179252121705, acc: 0.960892236385
+        dev acc: 0.968
+    Epoch 2:
+        cost: 0.174375187066, acc: 0.985225955968
+        dev acc: 0.972
+    ....
+    ....
+    Epoch 8:
+        cost: 0.172080848612, acc: 0.985515643105
+        dev acc: 0.972
+
 
 
 ## NLPCC 2017 News headline Classification
