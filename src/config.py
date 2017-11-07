@@ -55,7 +55,7 @@ class ConfigRnn(object):
 
     # [model]
     we = None
-    model_name = "rnn"
+    model_name = "TextRNN"
     epoch_size = 5
     batch_size = 128
     word_dim = 100

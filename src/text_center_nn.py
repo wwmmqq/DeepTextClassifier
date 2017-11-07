@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import division
 import tensorflow as tf
 from tools import batch_iter
+from center_fun import center_cost
 
 
 class Model(object):
@@ -26,6 +27,10 @@ class Model(object):
         self.learning_rate_decay_op = self.learning_rate.assign(self.learning_rate.value()*0.1)
 
         self.drop_keep_rate = tf.placeholder(tf.float32, name='drop_keep_rate')
+
+        # centers
+        self.centers = tf.Variable(tf.random_normal([self.class_num, self.mlp_size], stddev=0.01),
+                                   name="centers")
 
         # Word Embedding
         self.we = tf.Variable(config.we, name='emb')
@@ -58,17 +63,19 @@ class Model(object):
                                                               rnn_cell_bw,
                                                               embedded_seq, self.in_len,
                                                               dtype=tf.float32)
-        # [batch_size, cell.state_size x 2]
+        # rnn_out:  [batch_size, cell.state_size x 2]
         rnn_out = tf.concat(b_states, axis=-1)
         fc1 = tf.layers.dense(rnn_out, self.rnn_size, activation=tf.nn.relu)
         fc1_drop = tf.nn.dropout(fc1, keep_prob=self.drop_keep_rate)
         self.fc2 = tf.layers.dense(fc1_drop, self.mlp_size, activation=tf.nn.relu)
+
         self.logits = tf.layers.dense(self.fc2, self.class_num)
 
     def _set_cost_and_optimize(self):
         softmax_cost = tf.reduce_mean(
             tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits, labels=self.in_y))
-        self.cost = softmax_cost
+        c_cost = center_cost(self.fc2, self.in_y, self.centers)
+        self.cost = softmax_cost + c_cost
         optimizer = tf.train.AdamOptimizer(self.learning_rate)  # .minimize(self.cost)
 
         train_vars = tf.trainable_variables()

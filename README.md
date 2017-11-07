@@ -8,6 +8,9 @@
 ## 4-ICLR2017 A Structured Self-attentive Sentence Embedding
 
 # Experiments
+## 2D - viewer
+can be find in folder
+[view](file:/viewr)
 
 ## Question Classification (QC 2002)
 http://cogcomp.org/Data/QA/QC/
@@ -78,16 +81,29 @@ http://cogcomp.org/Data/QA/QC/
 ![rnn-att](figs/qc_self_stru_train.png)
 
     Epoch 1:
-        cost: 0.179252121705, acc: 0.960892236385
+        train cost: 0.179252121705, acc: 0.960892236385
         dev acc: 0.968
     Epoch 2:
-        cost: 0.174375187066, acc: 0.985225955968
+        train cost: 0.174375187066, acc: 0.985225955968
         dev acc: 0.972
     ....
     ....
     Epoch 8:
-        cost: 0.172080848612, acc: 0.985515643105
+        train cost: 0.172080848612, acc: 0.985515643105
         dev acc: 0.972
+
+
+### GRU with Center Loss
+![gru-center-loss](figs/qc_gru_center_loss_train.png)
+
+    Epoch 0: train cost: 0.00327359643783, acc: 0.98348783314
+    Epoch 0: test acc: 0.974
+    Epoch 1: train cost: 0.00208708796292, acc: 0.991888760139
+    Epoch 1: test acc: 0.98
+    Epoch 2: train cost: 0.00197653938085, acc: 0.99449594438
+    Epoch 2: test acc: 0.976
+    Epoch 3: train cost: 0.00187900724474, acc: 0.996234067207
+    Epoch 3: test acc: 0.978
 
 
 
