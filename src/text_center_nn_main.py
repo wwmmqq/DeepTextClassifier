@@ -7,6 +7,8 @@ from text_center_nn import Model
 from dataset import DataSet
 from config import ConfigRnn as Config
 
+import numpy as np
+import tools
 
 my_config = Config()
 my_data = DataSet(my_config, True)
@@ -24,5 +26,13 @@ def train():
                             save_model=True,
                             summary_writer=summary_writer)
 
+
+def get_repr(fname):
+    samples_v = my_model.get_represent(sess, [my_data.train_x, my_data.train_y, my_data.train_seq_len])
+    samples_v = np.array(samples_v)
+    print ("samples_vector: {}".format(samples_v.shape))
+    tools.save_params([samples_v, my_data.train_y], my_config.log_dir+"/{}.pkl".format(fname))
+
 if __name__ == '__main__':
     train()
+    # get_repr("center_divide_samples_vector")

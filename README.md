@@ -106,6 +106,21 @@ http://cogcomp.org/Data/QA/QC/
     Epoch 3: test acc: 0.978
 
 
+### Center Divide
+![center-divide](figs/qc_center_divide.png)
+
+    Epoch 0: train cost: 0.00184123501496, acc: 0.982908458864
+    Epoch 0: test acc: 0.974
+    Epoch 1: train cost: 0.000830719525279, acc: 0.991888760139
+    Epoch 1: test acc: 0.974
+    Epoch 2: train cost: 0.000683305005285, acc: 0.993047508691
+    Epoch 2: test acc: 0.978
+    Epoch 3: train cost: 0.000309743383767, acc: 0.997392815759
+    Epoch 3: test acc: 0.982
+    Epoch 4: train cost: 0.000337060144333, acc: 0.995654692932
+    Epoch 4: test acc: 0.986
+
+
 
 ## NLPCC 2017 News headline Classification
 https://github.com/FudanNLP/nlpcc2017_news_headline_categorization

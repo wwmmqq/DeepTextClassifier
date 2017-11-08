@@ -2,6 +2,23 @@
 
 ## Question Classification
 
-### Encoded by GRU (50dim)
+### Encoded to 50dim
 
-![gru](gru_encoder_view.png)
+## raw
+<center class="raw">
+    <img src="gru_pca2d.png">
+
+</center>
+
+## with center loss
+
+<center class="center">
+    <img src="gru_pca2d.png" alt="">
+    <img src="center_soft_loss_pca2d.png">
+</center>
+
+
+## center divide
+<center class="center">
+    <img src="center_divide_pca2d.png" alt="">
+</center>
