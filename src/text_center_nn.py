@@ -4,7 +4,7 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 from tools import batch_iter
-from center_fun import center_cost
+from fun_center import center_cost
 
 
 class Model(object):

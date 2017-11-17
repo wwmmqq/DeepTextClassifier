@@ -3,7 +3,7 @@ from __future__ import print_function
 from __future__ import division
 import tensorflow as tf
 from tools import batch_iter
-from attention_fun import attention_self
+from fun_attention import attention_self
 
 
 class Model(object):
