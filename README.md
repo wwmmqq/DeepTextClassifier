@@ -19,6 +19,43 @@ http://cogcomp.org/Data/QA/QC/
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | sentence | question types | 10 | 6 | 15452/500 | English|
 
+#### AVG (average word embedding) training
+![avg](figs/qc_avg_train.png)
+
+    Epoch 0: train cost: 0.0157731532153, acc: 0.856604866744
+    Epoch 0: test acc: 0.914
+    Epoch 1: train cost: 0.011120560211, acc: 0.90527230591
+    Epoch 1: test acc: 0.926
+    Epoch 2: train cost: 0.0110226789984, acc: 0.899188876014
+    Epoch 2: test acc: 0.93
+    Epoch 3: train cost: 0.0108223813667, acc: 0.898899188876
+    Epoch 3: test acc: 0.93
+    Epoch 4: train cost: 0.0105730641033, acc: 0.910486674392
+    Epoch 4: test acc: 0.93
+    Epoch 5: train cost: 0.0107601115206, acc: 0.901796060255
+    Epoch 5: test acc: 0.93
+    Epoch 6: train cost: 0.0109058949116, acc: 0.905561993048
+    Epoch 6: test acc: 0.93
+    Epoch 7: train cost: 0.010843385788, acc: 0.897740440324
+    Epoch 7: test acc: 0.93
+    Epoch 8: train cost: 0.0106531062346, acc: 0.91077636153
+    Epoch 8: test acc: 0.93
+    Epoch 9: train cost: 0.0101846210305, acc: 0.912224797219
+    Epoch 9: test acc: 0.93
+
+#### AVGTFIDF (average word embedding tfidf) training
+![avgtfidf](figs/qc_avg_tfidf_train.png)
+
+    Epoch 0: train cost: 0.0227936226724, acc: 0.743337195829
+    Epoch 0: test acc: 0.858
+    Epoch 1: train cost: 0.0163344583568, acc: 0.823001158749
+    Epoch 1: test acc: 0.888
+    Epoch 2: train cost: 0.015335006076, acc: 0.832560834299
+    Epoch 2: test acc: 0.892
+    ...
+    Epoch 9: train cost: 0.0152274934685, acc: 0.83516801854
+    Epoch 9: test acc: 0.892
+
 #### kim cnn training
 ![cnn](figs/qc_cnn_train.png)
 

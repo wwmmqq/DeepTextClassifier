@@ -20,6 +20,17 @@ def batch_iter(x, y, seq_len=None, batch_size=None, shuffle=False):
             yield x[excerpt], y[excerpt]
 
 
+def batch_iter2(x, y, seq_len, tfidf, batch_size=None, shuffle=False):
+    assert len(x) == len(y)
+    idx = np.arange(len(x))
+    if shuffle:
+        idx = np.random.permutation(len(x))
+
+    for start_idx in range(0, len(x), batch_size):
+        excerpt = idx[start_idx:start_idx + batch_size]
+        yield x[excerpt], y[excerpt], seq_len[excerpt], tfidf[excerpt]
+
+
 def save_params(params, fname):
     if os.path.exists(fname):
         os.remove(fname)

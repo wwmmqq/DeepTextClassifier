@@ -2,10 +2,7 @@
 from __future__ import print_function
 from __future__ import division
 import tensorflow as tf
-import numpy as np
-from tools import batch_iter
-from fun_center import center_cost
-from fun_tools import cosine_distance
+from tools import batch_iter2 as batch_iter
 
 
 class Model(object):
@@ -17,12 +14,11 @@ class Model(object):
 
         # Setup Model Parameters
         self.max_seq_len = config.max_seq_len
-        self.rnn_size = config.rnn_size
+
         # self.vocab_size = config.vocab_size
         self.word_dim = config.word_dim
         self.mlp_size = config.mlp_size
         self.class_num = config.class_num
-        self.batch_size = config.batch_size
         self.max_gradient_norm = config.max_gradient_norm
         self.global_step = tf.Variable(0, name="global_step", trainable=False)
 
@@ -30,10 +26,6 @@ class Model(object):
         self.learning_rate_decay_op = self.learning_rate.assign(self.learning_rate.value()*0.1)
 
         self.drop_keep_rate = tf.placeholder(tf.float32, name='drop_keep_rate')
-
-        # centers
-        self.centers = tf.Variable(tf.random_normal([self.class_num, self.mlp_size], stddev=0.01),
-                                   name="centers")
 
         # Word Embedding
         self.we = tf.Variable(config.we, name='emb')
@@ -44,8 +36,6 @@ class Model(object):
         self._set_cost_and_optimize()
         # Set prediction and acc
         self._set_predict()
-        self._set_center_predict()
-
         # add tensor board
         self._log_summaries()
         # model parameter saver
@@ -55,36 +45,27 @@ class Model(object):
         # Model PlaceHolder for input
         self.in_len = tf.placeholder(tf.int32, [None])
         self.in_x = tf.placeholder(tf.int32, [None, self.max_seq_len])  # shape: (batch x seq)
+        self.tfidf = tf.placeholder(tf.float32, [None, self.max_seq_len])
         self.in_y = tf.placeholder(tf.int32, [None])
 
         # Embedding layer
         # shape: (batch x seq x word_dim)
         embedded_seq = tf.nn.embedding_lookup(self.we, self.in_x)
-        rnn_cell_fw = tf.nn.rnn_cell.GRUCell(self.rnn_size)
-        rnn_cell_bw = tf.nn.rnn_cell.GRUCell(self.rnn_size)
-        # outputs: A tuple (output_fw, output_bw)
-        # output_fw: [batch_size, max_time, cell_bw.output_size]
-        b_outputs, b_states = tf.nn.bidirectional_dynamic_rnn(rnn_cell_fw,
-                                                              rnn_cell_bw,
-                                                              embedded_seq, self.in_len,
-                                                              dtype=tf.float32)
-        # rnn_out:  [batch_size, cell.state_size x 2]
-        rnn_out = tf.concat(b_states, axis=-1)
-        fc1 = tf.layers.dense(rnn_out, self.rnn_size, activation=tf.nn.relu)
-        fc1_drop = tf.nn.dropout(fc1, keep_prob=self.drop_keep_rate)
-        self.fc2 = tf.layers.dense(fc1_drop, self.mlp_size, activation=tf.nn.relu)
 
+        # shape: (batch x word_dim)
+        seq_len = tf.expand_dims(tf.cast(self.in_len, tf.float32), -1)
+        # shape: (batch x seq x word_dim) * (batch x seq x 1)
+        s = embedded_seq * tf.expand_dims(self.tfidf, axis=-1)
+        avg = tf.reduce_sum(s, axis=1) / seq_len
+        fc1 = tf.layers.dense(avg, self.mlp_size, activation=tf.nn.relu)
+        fc1_drop = tf.nn.dropout(fc1, keep_prob=self.drop_keep_rate)
+        self.fc2 = fc1_drop
         self.logits = tf.layers.dense(self.fc2, self.class_num)
-        self._set_center_predict()
 
     def _set_cost_and_optimize(self):
         softmax_cost = tf.reduce_mean(
             tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits, labels=self.in_y))
-        # c_cost = center_cost(self.fc2, self.in_y, self.centers)
-
-        c_cost = tf.reduce_mean(
-            tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.distance, labels=self.in_y))
-        self.cost = 0.1 * softmax_cost + 0.9 * c_cost
+        self.cost = softmax_cost
         optimizer = tf.train.AdamOptimizer(self.learning_rate)  # .minimize(self.cost)
 
         train_vars = tf.trainable_variables()
@@ -100,22 +81,6 @@ class Model(object):
         self.acc_num = tf.reduce_sum(tf.cast(check_prediction, tf.int32))
         self.acc = tf.reduce_mean(tf.cast(check_prediction, tf.float32))
 
-    def _set_center_predict(self):
-        # self.fc2 ==> [batch x 1 x mlp_dim]
-        # self.centers shape: [class_num x mlp_dim]
-        # diff_to_centers shape: [batch x class_num x mlp_dim]
-        diff_to_centers = tf.subtract(tf.expand_dims(self.fc2, dim=1), self.centers)
-
-        # distance shape: [batch x class_num]
-        self.distance = tf.reduce_sum(tf.square(diff_to_centers), axis=2)
-
-        y_prob = tf.nn.softmax(self.distance)
-        y_c_p = tf.cast(tf.argmax(y_prob, 1), tf.int32)
-        # Accuracy
-        check_prediction = tf.equal(y_c_p, self.in_y)
-        self.center_acc_num = tf.reduce_sum(tf.cast(check_prediction, tf.int32))
-        self.center_acc = tf.reduce_mean(tf.cast(check_prediction, tf.float32))
-
     def _log_summaries(self):
         """
         Adds summaries for the following variables to the graph and returns
@@ -130,6 +95,7 @@ class Model(object):
             self.in_x: batch[0],
             self.in_y: batch[1],
             self.in_len: batch[2],
+            self.tfidf: batch[3],
             self.drop_keep_rate: drop_keep_rate
         }
         return_list = [self.train_op, self.merged, self.global_step, self.cost, self.acc_num]
@@ -141,36 +107,16 @@ class Model(object):
             self.in_x: batch[0],
             self.in_y: batch[1],
             self.in_len: batch[2],
+            self.tfidf: batch[3],
             self.drop_keep_rate: 1.0
         }
         return sess.run(self.acc_num, feed_dict)
-
-    def model_center_test(self, sess, batch):
-        feed_dict = {
-            self.in_x: batch[0],
-            self.in_y: batch[1],
-            self.in_len: batch[2],
-            self.drop_keep_rate: 1.0
-        }
-        return sess.run([self.acc_num, self.center_acc_num], feed_dict)
-
-    def model_debug(self, sess):
-        x = np.array(range(self.batch_size * self.max_seq_len), dtype=np.int32)
-        x = x.reshape(self.batch_size, self.max_seq_len)
-        y = np.array([0]*self.batch_size, dtype=np.int32)
-        z = np.array([10]*self.batch_size, dtype=np.int32)
-        feed_dict = {
-            self.in_x: x,
-            self.in_y: y,
-            self.in_len: z,
-            self.drop_keep_rate: 1.0
-        }
-        return sess.run(self.distance, feed_dict)
 
     def model_get_represent(self, sess, batch):
         feed_dict = {
             self.in_x: batch[0],
             self.in_len: batch[2],
+            self.tfidf: batch[3],
             self.drop_keep_rate: 1.0
         }
         return sess.run(self.fc2, feed_dict)
@@ -180,7 +126,7 @@ class Model(object):
         cost_sum = 0.0
         acc_sum = 0
         sample_cnt = 0
-        for batch in batch_iter(train_xy[0], train_xy[1], train_xy[2], batch_size=batch_size, shuffle=True):
+        for batch in batch_iter(train_xy[0], train_xy[1], train_xy[2], train_xy[3], batch_size=batch_size, shuffle=True):
             _, summary, step, cost, acc_num = self.model_train(sess, batch)
             summary_writer.add_summary(summary, step)
             sample_cnt += len(batch[1])
@@ -204,7 +150,7 @@ class Model(object):
                 raise RuntimeError('not exist model ...')
         acc_sum = 0
         sample_sum = 0
-        for batch in batch_iter(test_data[0], test_data[1], test_data[2], batch_size=100):
+        for batch in batch_iter(test_data[0], test_data[1], test_data[2], test_data[3], batch_size=100):
             acc_num = self.model_test(sess, batch)
             acc_sum += acc_num
             sample_sum += len(batch[1])
@@ -226,7 +172,7 @@ class Model(object):
                 save_file = self.model_dir+'/{}/{}_saver.ckpt'.format(self.model_name, self.model_name)
                 self.saver.save(sess, save_file, global_step=epoch + 1)
 
-            if epoch < 1:
+            if epoch < 3:
                 sess.run(self.learning_rate_decay_op)
 
     def get_represent(self, sess, train_xy):
@@ -238,7 +184,7 @@ class Model(object):
             raise RuntimeError('not exist model ...')
 
         represent = []
-        for batch in batch_iter(train_xy[0], train_xy[1], train_xy[2], batch_size=100):
+        for batch in batch_iter(train_xy[0], train_xy[1], train_xy[2], train_xy[3], batch_size=100):
             repre = self.model_get_represent(sess, batch)
             represent += repre.tolist()
         return represent
